@@ -61,67 +61,82 @@
         const defaultPosterImage = new Image();
         defaultPosterImage.src = "1.jpeg";
 
-        document.getElementById("posterForm").addEventListener("submit", function (e) {
-            e.preventDefault();
+        <script>
+    document.getElementById("posterForm").addEventListener("submit", function (e) {
+        e.preventDefault();
 
-            const fullName = document.getElementById("fullName").value;
-            const profilePhoto = document.getElementById("profilePhoto").files[0];
+        const fullName = document.getElementById("fullName").value;
+        const profilePhoto = document.getElementById("profilePhoto").files[0];
 
-            if (!profilePhoto) {
-                alert("Please select a profile photo.");
-                return;
-            }
+        if (!profilePhoto) {
+            alert("Please select a profile photo.");
+            return;
+        }
 
-            // Create a new FileReader to read the uploaded image
-            const reader = new FileReader();
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
 
-            reader.onload = function () {
-                const image = new Image();
-                image.src = reader.result;
-                image.onload = function () {
-                    // Create a canvas to draw the poster
-                    const canvas = document.createElement("canvas");
-                    canvas.width = 500;
-                    canvas.height = 700;
-                    const ctx = canvas.getContext("2d");
+        const reader = new FileReader();
 
-                    // Draw the default background poster image
-                    ctx.drawImage(defaultPosterImage, 0, 0, 500, 700);
+        reader.onload = function () {
+            const image = new Image();
+            image.src = reader.result;
 
-                    // Calculate the position and size of the profile photo within the poster
-                    const photoWidth = 150;
-                    const photoHeight = 180;
-                    const photoX = canvas.width - photoWidth; // Rightmost position
-                    const photoY = canvas.height - photoHeight; // Bottommost position
+            image.onload = function () {
+                // Crop the image to a square
+                const size = Math.min(image.width, image.height);
+                canvas.width = size;
+                canvas.height = size;
 
-                    // Draw the uploaded profile photo scaled to fit
-                    ctx.drawImage(image, photoX, photoY, photoWidth, photoHeight);
+                const offsetX = (image.width - size) / 2;
+                const offsetY = (image.height - size) / 2;
 
-                    // Add the entered name to the poster
-                    ctx.font = "bold 20px Arial";
-                    ctx.fillStyle = "darkred"; // Change text color to dark red
-                    ctx.textAlign = "right";
-                    ctx.fillText(fullName, 480, 690);
+                ctx.drawImage(image, offsetX, offsetY, size, size, 0, 0, size, size);
 
-                    // Create an image element for the poster
-                    const posterImage = new Image();
-                    posterImage.src = canvas.toDataURL("image/jpeg");
+                // Draw the default background poster image
+                ctx.drawImage(defaultPosterImage, 0, 0, 500, 700);
 
-                    // Display the poster on the page
-                    document.getElementById("posterPreview").innerHTML = "";
-                    document.getElementById("posterPreview").appendChild(posterImage);
+                // Calculate the position and size of the profile photo within the poster
+                const photoWidth = 150;
+                const photoHeight = 180;
+                const photoX = canvas.width - photoWidth; // Rightmost position
+                const photoY = canvas.height - photoHeight; // Bottommost position
 
-                    // Show the download button and set the poster as the download link
-                    const downloadButton = document.getElementById("downloadButton");
-                    downloadButton.style.display = "block";
-                    // Set the download link to the poster image
-                    downloadButton.href = posterImage.src;
-                    downloadButton.download = "poster.jpeg"; // Set the filename for download
-                };
+                // Draw the cropped and scaled profile photo with a 2px orange boundary
+                ctx.beginPath();
+                ctx.arc(photoX + photoWidth / 2, photoY + photoHeight / 2, photoWidth / 2, 0, 2 * Math.PI);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'orange';
+                ctx.stroke();
+                ctx.clip();
+
+                ctx.drawImage(canvas, photoX, photoY, photoWidth, photoHeight);
+
+                // Add the entered name to the poster
+                ctx.font = "bold 20px Arial";
+                ctx.fillStyle = "darkred"; // Change text color to dark red
+                ctx.textAlign = "right";
+                ctx.fillText(fullName, 480, 690);
+
+                // Create an image element for the poster
+                const posterImage = new Image();
+                posterImage.src = canvas.toDataURL("image/jpeg");
+
+                // Display the poster on the page
+                document.getElementById("posterPreview").innerHTML = "";
+                document.getElementById("posterPreview").appendChild(posterImage);
+
+                // Show the download button and set the poster as the download link
+                const downloadButton = document.getElementById("downloadButton");
+                downloadButton.style.display = "block";
+                // Set the download link to the poster image
+                downloadButton.href = posterImage.src;
+                downloadButton.download = "poster.jpeg"; // Set the filename for download
             };
+        };
 
-            reader.readAsDataURL(profilePhoto);
-        });
+        reader.readAsDataURL(profilePhoto);
+    });
     </script>
 </body>
 </html>
